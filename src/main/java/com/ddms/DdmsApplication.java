@@ -22,6 +22,7 @@ public class DdmsApplication {
         System.out.println("\n========================================================================");
         System.out.println("   DDMS CLOUD APPLICATION STARTED SUCCESSFULLY!");
         System.out.println("   Access the system locally: http://localhost:8080");
+        System.out.println("   Access the deployed cloud: https://mini-project-n3hr.onrender.com");
         System.out.println("========================================================================\n");
     }
 
