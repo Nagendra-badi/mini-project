@@ -1,0 +1,24 @@
+# Maven build outputs
+target/
+*.war
+*.sar
+*.ear
+*.jar
+*.class
+
+# Local Databases and Storage
+data/
+document-storage/
+*.db
+*.log
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.nb-gradle/
+nbproject/
+build/
+.history/
