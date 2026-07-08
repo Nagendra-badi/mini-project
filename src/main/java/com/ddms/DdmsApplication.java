@@ -9,6 +9,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.ddms.model.Category;
+import com.ddms.repository.CategoryRepository;
+
 @SpringBootApplication
 public class DdmsApplication {
 
@@ -27,11 +30,19 @@ public class DdmsApplication {
     }
 
     @Bean
-    CommandLineRunner init() {
+    CommandLineRunner init(CategoryRepository categoryRepository) {
         return args -> {
             try {
-                // Ensure storage and data directories exist
                 initializeStorage();
+                
+                // Seed default categories if none exist
+                if (categoryRepository.count() == 0) {
+                    categoryRepository.save(new Category("General"));
+                    categoryRepository.save(new Category("Reports"));
+                    categoryRepository.save(new Category("Invoices"));
+                    categoryRepository.save(new Category("Personal"));
+                    System.out.println("Default categories seeded successfully.");
+                }
             } catch (Exception e) {
                 System.err.println("Could not initialize storage directory: " + e.getMessage());
             }
