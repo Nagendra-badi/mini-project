@@ -15,15 +15,22 @@ public class DdmsApplication {
         SpringApplication.run(DdmsApplication.class, args);
     }
 
+    private static void initializeStorage() {
+        new File("./document-storage").mkdirs();
+        new File("./data").mkdirs();
+        System.out.println("\n========================================================================");
+        System.out.println("   DDMS CLOUD APPLICATION STARTED SUCCESSFULLY!");
+        System.out.println("   Access the system locally: http://localhost:8080");
+        System.out.println("========================================================================\n");
+    }
+
     @Bean
     CommandLineRunner init() {
         return args -> {
             try {
                 // Ensure storage and data directories exist
-                Files.createDirectories(Paths.get("./document-storage"));
-                Files.createDirectories(Paths.get("./data"));
-                System.out.println("Storage directories initialized successfully.");
-            } catch (IOException e) {
+                initializeStorage();
+            } catch (Exception e) {
                 System.err.println("Could not initialize storage directory: " + e.getMessage());
             }
         };
