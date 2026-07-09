@@ -87,8 +87,12 @@ public class DocumentService {
             endOfDay = uploadDate.atTime(23, 59, 59, 999999999);
         }
         
+        String cleanQuery = (query != null && !query.trim().isEmpty()) ? query : null;
+        String cleanCategory = (categoryName != null && !categoryName.trim().isEmpty()) ? categoryName : null;
+        String cleanFileType = (fileType != null && !fileType.trim().isEmpty()) ? fileType : null;
+        
         Long userId = user != null ? user.getId() : null;
-        return documentRepository.searchDocuments(userId, query, categoryName, fileType, startOfDay, endOfDay, pageable);
+        return documentRepository.searchDocuments(userId, cleanQuery, cleanCategory, cleanFileType, startOfDay, endOfDay, pageable);
     }
 
     public Document updateDocumentDetails(Long docId, String description, Long categoryId, User user) throws Exception {
