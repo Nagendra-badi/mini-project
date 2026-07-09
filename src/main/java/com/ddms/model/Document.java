@@ -40,6 +40,10 @@ public class Document {
     @Column(length = 2048)
     private String description;
 
+    @Lob
+    @Column(name = "file_data", columnDefinition = "LONGBLOB")
+    private byte[] fileData;
+
     public Document() {
     }
 
@@ -133,5 +137,13 @@ public class Document {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public byte[] getFileData() {
+        return fileData;
+    }
+
+    public void setFileData(byte[] fileData) {
+        this.fileData = fileData;
     }
 }

@@ -54,10 +54,7 @@ public class DocumentService {
         String fileExtension = getFileExtension(originalFilename);
         String uniqueFileName = UUID.randomUUID().toString() + (fileExtension.isEmpty() ? "" : "." + fileExtension);
 
-        // 4. Upload File to Storage
-        String relativeUrl = storageService.uploadFile(file, uniqueFileName);
-
-        // 5. Create Document Record
+        // 4. Create Document Record
         Document doc = new Document(
                 uniqueFileName,
                 originalFilename,
@@ -65,12 +62,16 @@ public class DocumentService {
                 fileExtension.toUpperCase(),
                 LocalDateTime.now(),
                 user,
-                relativeUrl,
+                "", // Placeholder, set after generating ID
                 category,
                 description
         );
+        doc.setFileData(file.getBytes());
 
         Document savedDoc = documentRepository.save(doc);
+        savedDoc.setS3Url("/api/documents/" + savedDoc.getId() + "/download");
+        savedDoc = documentRepository.save(savedDoc);
+
         activityLogService.log(user.getUsername(), "UPLOAD", "Uploaded document: " + originalFilename + " (" + file.getSize() + " bytes)");
         return savedDoc;
     }
@@ -142,13 +143,6 @@ public class DocumentService {
             throw new Exception("Access denied: You cannot delete this document.");
         }
 
-        // Delete from Storage
-        try {
-            storageService.deleteFile(doc.getFileName());
-        } catch (IOException e) {
-            System.err.println("Failed to delete physical file: " + e.getMessage());
-        }
-
         // Delete from DB
         documentRepository.delete(doc);
         activityLogService.log(user.getUsername(), "DELETE", "Deleted document: " + doc.getOriginalName());
@@ -163,7 +157,7 @@ public class DocumentService {
             throw new Exception("Access denied: You cannot access this document.");
         }
 
-        org.springframework.core.io.Resource resource = storageService.downloadFile(doc.getFileName());
+        org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(doc.getFileData());
         activityLogService.log(user.getUsername(), "DOWNLOAD", "Downloaded document: " + doc.getOriginalName());
         return resource;
     }
