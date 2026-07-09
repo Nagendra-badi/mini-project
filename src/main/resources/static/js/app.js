@@ -297,23 +297,23 @@ function switchTab(tabId) {
 // ==========================================
 async function loadDashboardStats() {
     try {
-        let statsUrl = currentUser.role === 'ADMIN' ? '/api/admin/statistics' : '/api/documents';
+        let statsUrl = currentUser.role === 'ADMIN' ? '/api/admin/statistics' : '/api/documents?size=1000';
+        const response = await fetch(statsUrl);
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const data = await response.json();
         
         if (currentUser.role === 'ADMIN') {
-            const response = await fetch(statsUrl);
-            const stats = await response.json();
-            
-            document.getElementById('stat-total-docs').textContent = stats.totalDocuments;
-            document.getElementById('stat-storage-used').textContent = formatBytes(stats.storageUsed);
-            document.getElementById('stat-recent-uploads').textContent = stats.recentUploads.length;
-            document.getElementById('stat-total-users').textContent = stats.totalUsers;
+            document.getElementById('stat-total-docs').textContent = data.totalDocuments;
+            document.getElementById('stat-storage-used').textContent = formatBytes(data.storageUsed);
+            document.getElementById('stat-recent-uploads').textContent = data.recentUploads.length;
+            document.getElementById('stat-total-users').textContent = data.totalUsers;
 
-            renderRecentUploadsTable(stats.recentUploads);
-            renderChartsFromData(stats.fileTypeStats, stats.categoryStats);
+            renderRecentUploadsTable(data.recentUploads);
+            renderChartsFromData(data.fileTypeStats, data.categoryStats);
         } else {
-            // For standard user, we fetch all files to calculate client-side statistics
-            const response = await fetch('/api/documents?size=1000');
-            const data = await response.json();
             const docsList = data.content || [];
 
             document.getElementById('stat-total-docs').textContent = docsList.length;
@@ -470,6 +470,10 @@ async function fetchUserDocuments(page) {
 
     try {
         const response = await fetch(url);
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
         const data = await response.json();
         renderDocumentsTable(data.content || []);
         renderPagination(data);
