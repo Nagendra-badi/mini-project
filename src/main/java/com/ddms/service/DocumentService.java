@@ -87,7 +87,8 @@ public class DocumentService {
             endOfDay = uploadDate.atTime(23, 59, 59, 999999999);
         }
         
-        return documentRepository.searchDocuments(user, query, categoryName, fileType, startOfDay, endOfDay, pageable);
+        Long userId = user != null ? user.getId() : null;
+        return documentRepository.searchDocuments(userId, query, categoryName, fileType, startOfDay, endOfDay, pageable);
     }
 
     public Document updateDocumentDetails(Long docId, String description, Long categoryId, User user) throws Exception {

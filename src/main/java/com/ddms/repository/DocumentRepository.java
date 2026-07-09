@@ -18,13 +18,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     Page<Document> findByUploadedBy(User uploadedBy, Pageable pageable);
 
     @Query("SELECT d FROM Document d LEFT JOIN d.category c WHERE " +
-           "(:uploadedBy IS NULL OR d.uploadedBy = :uploadedBy) AND " +
+           "(:userId IS NULL OR d.uploadedBy.id = :userId) AND " +
            "(:fileName IS NULL OR LOWER(d.originalName) LIKE LOWER(CONCAT('%', :fileName, '%'))) AND " +
            "(:categoryName IS NULL OR LOWER(c.name) = LOWER(:categoryName)) AND " +
            "(:fileType IS NULL OR LOWER(d.fileType) = LOWER(:fileType)) AND " +
            "(:startOfDay IS NULL OR (d.uploadDate >= :startOfDay AND d.uploadDate <= :endOfDay))")
     Page<Document> searchDocuments(
-            @Param("uploadedBy") User uploadedBy,
+            @Param("userId") Long userId,
             @Param("fileName") String fileName,
             @Param("categoryName") String categoryName,
             @Param("fileType") String fileType,
