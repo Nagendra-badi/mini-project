@@ -79,8 +79,15 @@ public class DocumentService {
     public Page<Document> searchAndFilterDocuments(
             User user, String query, String categoryName, String fileType, LocalDate uploadDate, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("uploadDate").descending());
-        // For User, we pass the user entity. For Admin (if checked separately in Controller), we pass null to search all documents.
-        return documentRepository.searchDocuments(user, query, categoryName, fileType, uploadDate, pageable);
+        
+        java.time.LocalDateTime startOfDay = null;
+        java.time.LocalDateTime endOfDay = null;
+        if (uploadDate != null) {
+            startOfDay = uploadDate.atStartOfDay();
+            endOfDay = uploadDate.atTime(23, 59, 59, 999999999);
+        }
+        
+        return documentRepository.searchDocuments(user, query, categoryName, fileType, startOfDay, endOfDay, pageable);
     }
 
     public Document updateDocumentDetails(Long docId, String description, Long categoryId, User user) throws Exception {

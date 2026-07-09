@@ -22,13 +22,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
            "(:fileName IS NULL OR LOWER(d.originalName) LIKE LOWER(CONCAT('%', :fileName, '%'))) AND " +
            "(:categoryName IS NULL OR LOWER(c.name) = LOWER(:categoryName)) AND " +
            "(:fileType IS NULL OR LOWER(d.fileType) = LOWER(:fileType)) AND " +
-           "(:uploadDate IS NULL OR DATE(d.uploadDate) = :uploadDate)")
+           "(:startOfDay IS NULL OR (d.uploadDate >= :startOfDay AND d.uploadDate <= :endOfDay))")
     Page<Document> searchDocuments(
             @Param("uploadedBy") User uploadedBy,
             @Param("fileName") String fileName,
             @Param("categoryName") String categoryName,
             @Param("fileType") String fileType,
-            @Param("uploadDate") LocalDate uploadDate,
+            @Param("startOfDay") java.time.LocalDateTime startOfDay,
+            @Param("endOfDay") java.time.LocalDateTime endOfDay,
             Pageable pageable
     );
 
