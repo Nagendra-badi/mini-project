@@ -40,8 +40,7 @@ public class Document {
     @Column(length = 2048)
     private String description;
 
-    @Lob
-    @Column(name = "file_data", columnDefinition = "LONGBLOB")
+    @Column(name = "file_data", length = 52428800) // ~50MB limit to match application upload limits
     private byte[] fileData;
 
     public Document() {
