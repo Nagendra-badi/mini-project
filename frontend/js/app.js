@@ -962,6 +962,10 @@ async function fetchAdminUsers() {
         const response = await fetch('/api/admin/users');
         if (!response.ok) return;
         const users = await response.json();
+        
+        // Sort users by database ID to guarantee chronological order
+        users.sort((a, b) => a.id - b.id);
+        
         const tbody = document.getElementById('admin-users-table-body');
         tbody.innerHTML = '';
 
@@ -970,10 +974,10 @@ async function fetchAdminUsers() {
             return;
         }
 
-        users.forEach(u => {
+        users.forEach((u, index) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${u.id}</td>
+                <td>${index + 1}</td>
                 <td><span class="fw-bold">${u.username}</span></td>
                 <td>${u.email}</td>
                 <td>${u.fullName || 'N/A'}</td>
