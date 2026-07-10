@@ -163,7 +163,11 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<?> downloadDocument(@PathVariable Long id, HttpServletRequest request, HttpSession session) {
+    public ResponseEntity<?> downloadDocument(
+            @PathVariable Long id,
+            @RequestParam(value = "inline", defaultValue = "false") boolean inline,
+            HttpServletRequest request,
+            HttpSession session) {
         User loggedInUser = (User) session.getAttribute("user");
         if (loggedInUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
@@ -185,9 +189,10 @@ public class DocumentController {
                 contentType = "application/octet-stream";
             }
 
+            String dispositionType = inline ? "inline" : "attachment";
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getOriginalName() + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, dispositionType + "; filename=\"" + doc.getOriginalName() + "\"")
                     .body(resource);
 
         } catch (Exception e) {

@@ -679,16 +679,16 @@ async function previewDocument(docId) {
         
         const type = doc.fileType.toLowerCase();
         if (type === 'jpg' || type === 'jpeg' || type === 'png' || type === 'gif') {
-            frameContainer.innerHTML = `<img src="${doc.s3Url}" class="img-fluid rounded border border-secondary border-opacity-10" alt="Image preview" style="max-height: 400px; object-fit: contain; width: 100%;">`;
+            frameContainer.innerHTML = `<img src="${doc.s3Url}?inline=true" class="img-fluid rounded border border-secondary border-opacity-10" alt="Image preview" style="max-height: 400px; object-fit: contain; width: 100%;">`;
         } else if (type === 'pdf') {
-            frameContainer.innerHTML = `<iframe src="/api/documents/${doc.id}/download" style="width: 100%; height: 400px; border: 0;" class="rounded border border-secondary border-opacity-10"></iframe>`;
+            frameContainer.innerHTML = `<iframe src="/api/documents/${doc.id}/download?inline=true" style="width: 100%; height: 400px; border: 0;" class="rounded border border-secondary border-opacity-10"></iframe>`;
         } else if (['txt', 'html', 'css', 'js', 'json', 'xml', 'csv', 'java', 'py', 'sql', 'md'].includes(type)) {
             frameContainer.innerHTML = `
                 <div class="text-center p-4 text-secondary">
                     <i class="fa-solid fa-spinner fa-spin display-6 mb-2"></i>
                     <div>Loading text content...</div>
                 </div>`;
-            fetch(`/api/documents/${doc.id}/download`)
+            fetch(`/api/documents/${doc.id}/download?inline=true`)
                 .then(r => r.text())
                 .then(text => {
                     frameContainer.innerHTML = `<pre class="bg-dark text-light p-3 rounded small border-0" style="max-height: 400px; overflow-y: auto; text-align: left; white-space: pre-wrap; word-break: break-all; margin: 0; font-family: monospace;"><code>${escapeHtml(text)}</code></pre>`;
