@@ -177,13 +177,8 @@ public class DocumentController {
             Document doc = documentService.getDocument(id, loggedInUser);
             Resource resource = documentService.downloadDocument(id, loggedInUser);
 
-            // Determine content type
-            String contentType = null;
-            try {
-                contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-            } catch (IOException ex) {
-                System.out.println("Could not determine file type.");
-            }
+            // Determine content type using original name since resource is a ByteArrayResource
+            String contentType = request.getServletContext().getMimeType(doc.getOriginalName());
 
             if (contentType == null) {
                 contentType = "application/octet-stream";
