@@ -2,8 +2,10 @@ package com.ddms.service;
 
 import com.ddms.model.User;
 import com.ddms.repository.UserRepository;
+import com.ddms.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +14,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private DocumentRepository documentRepository;
 
     public User register(User user) throws Exception {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -76,13 +81,18 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    @Transactional
     public void deleteUser(Long id) throws Exception {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("User not found."));
         if ("ADMIN".equalsIgnoreCase(user.getRole())) {
             throw new Exception("Cannot delete an Admin account.");
         }
-        userRepository.deleteById(id);
+        // Cascade delete all documents uploaded by this user first to avoid Foreign Key Violations
+        List<com.ddms.model.Document> documents = documentRepository.findByUploadedBy(user);
+        documentRepository.deleteAll(documents);
+        
+        userRepository.delete(user);
     }
 
     public Optional<User> findById(Long id) {
