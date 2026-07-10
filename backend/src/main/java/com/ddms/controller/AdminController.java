@@ -54,6 +54,16 @@ public class AdminController {
         try {
             User loggedIn = (User) session.getAttribute("user");
             userService.deleteUser(id);
+            
+            // Refresh the logged-in admin's session details in case their database ID changed during re-indexing!
+            if (loggedIn != null) {
+                User updatedAdmin = userService.findByUsername(loggedIn.getUsername());
+                if (updatedAdmin != null) {
+                    session.setAttribute("user", updatedAdmin);
+                    loggedIn = updatedAdmin;
+                }
+            }
+            
             activityLogService.log(loggedIn.getUsername(), "ADMIN_DELETE_USER", "Deleted user account with ID: " + id);
             return ResponseEntity.ok(Map.of("message", "User deleted successfully."));
         } catch (Exception e) {

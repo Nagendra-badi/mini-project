@@ -109,6 +109,11 @@ public class UserService {
         // Fetch all remaining users sorted by their current ID ascending
         List<User> users = userRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id"));
         
+        // Detach all entities from the persistence context/Hibernate session.
+        // This is critical because native SQL updates modifying primary keys (id)
+        // will throw AssertionFailure if the entities remain attached during transaction flush/commit.
+        entityManager.clear();
+        
         long newId = 1;
         for (User u : users) {
             long oldId = u.getId();
@@ -146,5 +151,9 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 }
