@@ -3,6 +3,8 @@ package com.ddms.service;
 import com.ddms.model.User;
 import com.ddms.repository.UserRepository;
 import com.ddms.repository.DocumentRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,9 @@ public class UserService {
 
     @Autowired
     private DocumentRepository documentRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public User register(User user) throws Exception {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -93,6 +98,50 @@ public class UserService {
         documentRepository.deleteAll(documents);
         
         userRepository.delete(user);
+        userRepository.flush(); // Synchronize deletion immediately
+        
+        // Re-index remaining users sequentially (option 2)
+        reindexUserIds();
+    }
+
+    @Transactional
+    public void reindexUserIds() {
+        // Fetch all remaining users sorted by their current ID ascending
+        List<User> users = userRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id"));
+        
+        long newId = 1;
+        for (User u : users) {
+            long oldId = u.getId();
+            if (oldId != newId) {
+                // 1. Update matching user foreign keys in the documents table
+                entityManager.createNativeQuery("UPDATE documents SET user_id = :newId WHERE user_id = :oldId")
+                        .setParameter("newId", newId)
+                        .setParameter("oldId", oldId)
+                        .executeUpdate();
+                
+                // 2. Update user ID in the users table
+                entityManager.createNativeQuery("UPDATE users SET id = :newId WHERE id = :oldId")
+                        .setParameter("newId", newId)
+                        .setParameter("oldId", oldId)
+                        .executeUpdate();
+            }
+            newId++;
+        }
+        
+        // 3. Reset the primary key auto-increment sequence
+        try {
+            entityManager.createNativeQuery("SELECT setval(pg_get_serial_sequence('users', 'id'), :nextId, false)")
+                    .setParameter("nextId", newId)
+                    .getResultList();
+        } catch (Exception e) {
+            // Fallback for in-memory databases like H2
+            try {
+                entityManager.createNativeQuery("ALTER TABLE users ALTER COLUMN id RESTART WITH " + newId)
+                        .executeUpdate();
+            } catch (Exception ex) {
+                System.err.println("Could not reset user ID sequence: " + ex.getMessage());
+            }
+        }
     }
 
     public Optional<User> findById(Long id) {

@@ -974,10 +974,10 @@ async function fetchAdminUsers() {
             return;
         }
 
-        users.forEach((u, index) => {
+        users.forEach(u => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${index + 1}</td>
+                <td>${u.id}</td>
                 <td><span class="fw-bold">${u.username}</span></td>
                 <td>${u.email}</td>
                 <td>${u.fullName || 'N/A'}</td>
