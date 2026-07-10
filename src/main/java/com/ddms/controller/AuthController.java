@@ -140,10 +140,21 @@ public class AuthController {
     @Autowired
     private com.ddms.repository.DocumentRepository documentRepository;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @GetMapping("/test-db")
     public ResponseEntity<?> testDb() {
         Map<String, Object> result = new HashMap<>();
         try {
+            try {
+                java.util.List<Map<String, Object>> columns = jdbcTemplate.queryForList(
+                        "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'documents'"
+                );
+                result.put("db_columns", columns);
+            } catch (Exception metadataEx) {
+                result.put("metadata_error", metadataEx.getMessage());
+            }
             java.util.List<User> users = userService.getAllUsers();
             java.util.List<Map<String, Object>> usersList = new java.util.ArrayList<>();
             for (User u : users) {
