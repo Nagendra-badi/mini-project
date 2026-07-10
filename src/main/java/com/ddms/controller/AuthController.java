@@ -166,6 +166,18 @@ public class AuthController {
                 docsList.add(item);
             }
             result.put("documents", docsList);
+
+            // Run test query for userId = 1 (Bhaskar)
+            try {
+                org.springframework.data.domain.Page<com.ddms.model.Document> testQueryPage = documentRepository.searchDocuments(
+                        1L, null, null, null, null, null, org.springframework.data.domain.PageRequest.of(0, 10)
+                );
+                result.put("test_query_success", true);
+                result.put("test_query_count", testQueryPage.getTotalElements());
+            } catch (Exception queryEx) {
+                result.put("test_query_success", false);
+                result.put("test_query_error", queryEx.getMessage() != null ? queryEx.getMessage() : queryEx.toString());
+            }
         } catch (Exception e) {
             result.put("error", e.getMessage());
         }
