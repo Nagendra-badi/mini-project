@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -80,19 +81,35 @@ public class DocumentService {
             User user, String query, String categoryName, String fileType, LocalDate uploadDate, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("uploadDate").descending());
         
-        java.time.LocalDateTime startOfDay = null;
-        java.time.LocalDateTime endOfDay = null;
-        if (uploadDate != null) {
-            startOfDay = uploadDate.atStartOfDay();
-            endOfDay = uploadDate.atTime(23, 59, 59, 999999999);
+        Specification<Document> spec = Specification.where(null);
+        
+        if (user != null) {
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("uploadedBy").get("id"), user.getId()));
         }
         
-        String cleanQuery = (query != null && !query.trim().isEmpty()) ? query : null;
-        String cleanCategory = (categoryName != null && !categoryName.trim().isEmpty()) ? categoryName : null;
-        String cleanFileType = (fileType != null && !fileType.trim().isEmpty()) ? fileType : null;
+        if (query != null && !query.trim().isEmpty()) {
+            String qStr = "%" + query.trim().toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("originalName")), qStr));
+        }
         
-        Long userId = user != null ? user.getId() : null;
-        return documentRepository.searchDocuments(userId, cleanQuery, cleanCategory, cleanFileType, startOfDay, endOfDay, pageable);
+        if (categoryName != null && !categoryName.trim().isEmpty()) {
+            spec = spec.and((root, q, cb) -> cb.equal(
+                cb.lower(root.join("category", jakarta.persistence.criteria.JoinType.LEFT).get("name")),
+                categoryName.trim().toLowerCase()
+            ));
+        }
+        
+        if (fileType != null && !fileType.trim().isEmpty()) {
+            spec = spec.and((root, q, cb) -> cb.equal(cb.lower(root.get("fileType")), fileType.trim().toLowerCase()));
+        }
+        
+        if (uploadDate != null) {
+            java.time.LocalDateTime start = uploadDate.atStartOfDay();
+            java.time.LocalDateTime end = uploadDate.atTime(23, 59, 59, 999999999);
+            spec = spec.and((root, q, cb) -> cb.between(root.get("uploadDate"), start, end));
+        }
+        
+        return documentRepository.findAll(spec, pageable);
     }
 
     public Document updateDocumentDetails(Long docId, String description, Long categoryId, User user) throws Exception {
