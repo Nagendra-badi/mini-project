@@ -302,6 +302,8 @@ function switchTab(tabId) {
         fetchAdminCategories();
     } else if (tabId === 'admin-logs') {
         fetchAdminLogs();
+    } else if (tabId === 'admin-reports') {
+        fetchAdminUserReports();
     }
 }
 
@@ -1206,4 +1208,136 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// ==========================================
+// Admin User File Reports Page View
+// ==========================================
+async function fetchAdminUserReports() {
+    try {
+        const response = await fetch('/api/admin/user-file-reports');
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const data = await response.json();
+        renderAdminUserReports(data);
+    } catch (err) {
+        console.error('Failed to fetch user file reports:', err);
+        document.getElementById('admin-user-reports-container').innerHTML = 
+            `<div class="text-danger text-center py-4">Failed to load reports from server.</div>`;
+    }
+}
+
+function renderAdminUserReports(reports) {
+    const container = document.getElementById('admin-user-reports-container');
+    container.innerHTML = '';
+
+    if (reports.length === 0) {
+        container.innerHTML = `<div class="text-secondary text-center py-4">No standard users registered yet.</div>`;
+        return;
+    }
+
+    const accordion = document.createElement('div');
+    accordion.className = 'accordion accordion-flush';
+    accordion.id = 'userReportsAccordion';
+
+    reports.forEach((rep, index) => {
+        const item = document.createElement('div');
+        item.className = 'accordion-item border border-secondary border-opacity-10 rounded-3 mb-3 overflow-hidden shadow-sm bg-white bg-opacity-25';
+
+        const headerId = `heading-${rep.userId}`;
+        const collapseId = `collapse-${rep.userId}`;
+        const isExpanded = false;
+
+        let fileRows = '';
+        if (rep.documents.length === 0) {
+            fileRows = `<tr><td colspan="5" class="text-center text-secondary py-4"><i class="fa-regular fa-folder-open display-6 mb-2 d-block"></i>No files uploaded by this user.</td></tr>`;
+        } else {
+            rep.documents.forEach(doc => {
+                const badgeClass = getFileTypeBadgeClass(doc.fileType);
+                fileRows += `
+                    <tr>
+                        <td><span class="badge ${badgeClass} px-2 py-1">${doc.fileType || 'TXT'}</span></td>
+                        <td>
+                            <div class="fw-bold">${doc.originalName}</div>
+                            <div class="x-small text-secondary text-truncate" style="max-width: 250px;">${doc.description || 'No description'}</div>
+                        </td>
+                        <td>${formatBytes(doc.fileSize)}</td>
+                        <td>${formatDate(doc.uploadDate)}</td>
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-sm btn-outline-primary" onclick="previewDocument(${doc.id})" title="Preview"><i class="fa-solid fa-eye"></i></button>
+                                <a class="btn btn-sm btn-outline-success" href="/api/documents/${doc.id}/download" title="Download"><i class="fa-solid fa-download"></i></a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteDocumentFromReport(${doc.id})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        item.innerHTML = `
+            <h2 class="accordion-header" id="${headerId}">
+                <button class="accordion-button collapsed fw-bold d-flex align-items-center justify-content-between p-3" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="${isExpanded}" aria-controls="${collapseId}" style="background: var(--bg-surface); color: var(--text-primary); outline: none; border: 0;">
+                    <div class="d-flex align-items-center gap-3 w-100 me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
+                            ${rep.fullName.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div class="text-start">
+                            <div class="fw-bold fs-6">${rep.fullName} <span class="small text-secondary fw-normal">(@${rep.username})</span></div>
+                            <div class="x-small text-secondary">${rep.email || 'No email'} | ${rep.phone || 'No phone'}</div>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <span class="badge bg-primary px-3 py-1.5 rounded-pill fs-7">${rep.totalFiles} ${rep.totalFiles === 1 ? 'file' : 'files'} uploaded</span>
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="${headerId}" data-bs-parent="#userReportsAccordion">
+                <div class="accordion-body p-3 bg-light bg-opacity-20 border-top border-secondary border-opacity-10">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-sm small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>File Name</th>
+                                    <th>Size</th>
+                                    <th>Upload Date</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${fileRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        accordion.appendChild(item);
+    });
+
+    container.appendChild(accordion);
+}
+
+async function deleteDocumentFromReport(docId) {
+    if (!confirm('Are you sure you want to delete this document system-wide?')) return;
+    try {
+        const response = await fetch(`/api/documents/${docId}`, { method: 'DELETE' });
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (response.ok) {
+            showAlert('Document deleted successfully', 'success');
+            fetchAdminUserReports();
+            loadDashboardStats();
+        } else {
+            const err = await response.json();
+            showAlert(err.error || 'Failed to delete document', 'danger');
+        }
+    } catch (err) {
+        showAlert('Network error occurred while deleting document', 'danger');
+    }
 }

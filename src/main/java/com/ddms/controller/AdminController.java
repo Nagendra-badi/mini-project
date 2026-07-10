@@ -30,6 +30,9 @@ public class AdminController {
     @Autowired
     private ActivityLogService activityLogService;
 
+    @Autowired
+    private com.ddms.repository.DocumentRepository documentRepository;
+
     private boolean isAdmin(HttpSession session) {
         User user = (User) session.getAttribute("user");
         return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
@@ -106,5 +109,46 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied. Admin role required."));
         }
         return ResponseEntity.ok(activityLogService.getAllLogs());
+    }
+
+    @GetMapping("/user-file-reports")
+    public ResponseEntity<?> getUserFileReports(HttpSession session) {
+        if (!isAdmin(session)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied. Admin role required."));
+        }
+        try {
+            List<User> users = userService.getAllUsers();
+            List<Map<String, Object>> reports = new java.util.ArrayList<>();
+            for (User u : users) {
+                if ("USER".equalsIgnoreCase(u.getRole())) {
+                    Map<String, Object> userReport = new HashMap<>();
+                    userReport.put("userId", u.getId());
+                    userReport.put("username", u.getUsername());
+                    userReport.put("fullName", u.getFullName() != null ? u.getFullName() : u.getUsername());
+                    userReport.put("email", u.getEmail());
+                    userReport.put("phone", u.getPhone());
+
+                    List<Document> docs = documentRepository.findByUploadedBy(u);
+                    List<Map<String, Object>> docsList = new java.util.ArrayList<>();
+                    for (Document d : docs) {
+                        Map<String, Object> docMap = new HashMap<>();
+                        docMap.put("id", d.getId());
+                        docMap.put("originalName", d.getOriginalName());
+                        docMap.put("fileSize", d.getFileSize());
+                        docMap.put("fileType", d.getFileType());
+                        docMap.put("uploadDate", d.getUploadDate());
+                        docMap.put("description", d.getDescription());
+                        docMap.put("s3Url", d.getS3Url());
+                        docsList.add(docMap);
+                    }
+                    userReport.put("documents", docsList);
+                    userReport.put("totalFiles", docsList.size());
+                    reports.add(userReport);
+                }
+            }
+            return ResponseEntity.ok(reports);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
     }
 }

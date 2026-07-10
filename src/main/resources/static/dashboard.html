@@ -40,6 +40,7 @@
                     <li class="admin-only d-none"><a class="nav-link-item" id="nav-admin-users"><i class="fa-solid fa-users-gear"></i> Manage Users</a></li>
                     <li class="admin-only d-none"><a class="nav-link-item" id="nav-admin-categories"><i class="fa-solid fa-folder-plus"></i> Folder Categories</a></li>
                     <li class="admin-only d-none"><a class="nav-link-item" id="nav-admin-logs"><i class="fa-solid fa-clock-rotate-left"></i> System Logs</a></li>
+                    <li class="admin-only d-none"><a class="nav-link-item" id="nav-admin-reports"><i class="fa-solid fa-file-invoice"></i> User File Reports</a></li>
                 </ul>
             </nav>
 
@@ -451,6 +452,20 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ================= PAGE: USER FILE REPORTS (ADMIN) ================= -->
+            <section class="dashboard-page animate-fade-in d-none" id="page-admin-reports">
+                <h2 class="fw-bold mb-4" style="font-family: 'Outfit', sans-serif;">User File Reports</h2>
+                <div class="glass-panel p-4">
+                    <p class="text-secondary small mb-4">View files uploaded by each standard user and download or manage them system-wide.</p>
+                    <div id="admin-user-reports-container">
+                        <div class="text-center text-secondary py-4">
+                            <i class="fa-solid fa-spinner fa-spin display-6 mb-2"></i>
+                            <div>Loading file reports...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -569,7 +584,7 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom APP JS -->
-    <script src="js/app.js?v=2.2"></script>
+    <script src="js/app.js?v=2.3"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             initDashboard();
