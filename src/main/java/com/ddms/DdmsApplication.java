@@ -27,6 +27,27 @@ public class DdmsApplication {
         System.out.println("   Access the system locally: http://localhost:8080");
         System.out.println("   Access the deployed cloud: https://mini-project-n3hr.onrender.com");
         System.out.println("========================================================================\n");
+        openBrowser();
+    }
+
+    private static void openBrowser() {
+        // Skip automatically opening browser in headless cloud environments (e.g. Render)
+        if (System.getenv("PORT") != null || java.awt.GraphicsEnvironment.isHeadless()) {
+            return;
+        }
+        String url = "http://localhost:8080";
+        String os = System.getProperty("os.name").toLowerCase();
+        try {
+            if (os.contains("win")) {
+                Runtime.getRuntime().exec("cmd /c start " + url);
+            } else if (os.contains("mac")) {
+                Runtime.getRuntime().exec("open " + url);
+            } else if (os.contains("nix") || os.contains("nux")) {
+                Runtime.getRuntime().exec("xdg-open " + url);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not open browser automatically: " + e.getMessage());
+        }
     }
 
     @Bean
