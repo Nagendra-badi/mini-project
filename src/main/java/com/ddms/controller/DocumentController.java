@@ -79,10 +79,9 @@ public class DocumentController {
             }
         }
 
-        // Search is scoped to the logged-in user, but Admins see all documents system-wide
-        User searchUser = "ADMIN".equalsIgnoreCase(loggedInUser.getRole()) ? null : loggedInUser;
+        // Search is strictly scoped to the logged-in user, even for admins (who can manage other files via the Reports page)
         Page<Document> documents = documentService.searchAndFilterDocuments(
-                searchUser, query, category, type, uploadDate, page, size
+                loggedInUser, query, category, type, uploadDate, page, size
         );
         return ResponseEntity.ok(documents);
     }
