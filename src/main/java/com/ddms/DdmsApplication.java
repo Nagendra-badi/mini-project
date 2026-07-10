@@ -9,6 +9,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+
 import com.ddms.model.Category;
 import com.ddms.repository.CategoryRepository;
 
@@ -22,6 +25,10 @@ public class DdmsApplication {
     private static void initializeStorage() {
         new File("./document-storage").mkdirs();
         new File("./data").mkdirs();
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
         System.out.println("\n========================================================================");
         System.out.println("   DDMS CLOUD APPLICATION STARTED SUCCESSFULLY!");
         System.out.println("   Access the system locally: http://localhost:8080");
