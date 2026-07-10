@@ -682,6 +682,14 @@ async function previewDocument(docId) {
             frameContainer.innerHTML = `<img src="${doc.s3Url}?inline=true" class="img-fluid rounded border border-secondary border-opacity-10" alt="Image preview" style="max-height: 400px; object-fit: contain; width: 100%;">`;
         } else if (type === 'pdf') {
             frameContainer.innerHTML = `<iframe src="/api/documents/${doc.id}/download?inline=true" style="width: 100%; height: 400px; border: 0;" class="rounded border border-secondary border-opacity-10"></iframe>`;
+        } else if (type === 'mp4' || type === 'webm') {
+            frameContainer.innerHTML = `<video src="${doc.s3Url}?inline=true" controls class="w-100 rounded border border-secondary border-opacity-10" style="max-height: 400px; outline: none;"></video>`;
+        } else if (type === 'mp3' || type === 'wav') {
+            frameContainer.innerHTML = `
+                <div class="text-center py-5 bg-light rounded border border-secondary border-opacity-10">
+                    <i class="fa-solid fa-music display-1 text-primary mb-4 d-block"></i>
+                    <audio src="${doc.s3Url}?inline=true" controls style="width: 85%; outline: none;"></audio>
+                </div>`;
         } else if (['txt', 'html', 'css', 'js', 'json', 'xml', 'csv', 'java', 'py', 'sql', 'md'].includes(type)) {
             frameContainer.innerHTML = `
                 <div class="text-center p-4 text-secondary">
