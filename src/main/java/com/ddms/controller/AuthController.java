@@ -21,8 +21,7 @@ public class AuthController {
     @Autowired
     private ActivityLogService activityLogService;
 
-    @Autowired
-    private com.ddms.service.DocumentService documentService;
+
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody User user) {
@@ -138,64 +137,5 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
-    }
-
-    @Autowired
-    private com.ddms.repository.DocumentRepository documentRepository;
-
-    @Autowired
-    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
-
-    @GetMapping("/test-db")
-    public ResponseEntity<?> testDb() {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            try {
-                java.util.List<Map<String, Object>> columns = jdbcTemplate.queryForList(
-                        "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'documents'"
-                );
-                result.put("db_columns", columns);
-            } catch (Exception metadataEx) {
-                result.put("metadata_error", metadataEx.getMessage());
-            }
-            java.util.List<User> users = userService.getAllUsers();
-            java.util.List<Map<String, Object>> usersList = new java.util.ArrayList<>();
-            for (User u : users) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("id", u.getId());
-                item.put("username", u.getUsername());
-                item.put("role", u.getRole());
-                usersList.add(item);
-            }
-            result.put("users", usersList);
-
-            java.util.List<com.ddms.model.Document> docs = documentRepository.findAll();
-            java.util.List<Map<String, Object>> docsList = new java.util.ArrayList<>();
-            for (com.ddms.model.Document d : docs) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("id", d.getId());
-                item.put("originalName", d.getOriginalName());
-                item.put("uploadedBy_id", d.getUploadedBy() != null ? d.getUploadedBy().getId() : null);
-                item.put("uploadedBy_username", d.getUploadedBy() != null ? d.getUploadedBy().getUsername() : null);
-                docsList.add(item);
-            }
-            result.put("documents", docsList);
-
-            // Run test query for userId = 1 (Bhaskar) using Specification search
-            try {
-                User testUser = userService.findById(1L).orElse(null);
-                org.springframework.data.domain.Page<com.ddms.model.Document> testQueryPage = documentService.searchAndFilterDocuments(
-                        testUser, null, null, null, null, 0, 10
-                );
-                result.put("test_query_success", true);
-                result.put("test_query_count", testQueryPage.getTotalElements());
-            } catch (Exception queryEx) {
-                result.put("test_query_success", false);
-                result.put("test_query_error", queryEx.getMessage() != null ? queryEx.getMessage() : queryEx.toString());
-            }
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-        }
-        return ResponseEntity.ok(result);
     }
 }
