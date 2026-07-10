@@ -229,6 +229,19 @@ async function initDashboard() {
         await fetchAdminCategories();
         await fetchAdminLogs();
     }
+
+    // Stop media playback when preview modal is closed
+    const modalEl = document.getElementById('docPreviewModal');
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            const frameContainer = document.getElementById('preview-frame-container');
+            if (frameContainer) {
+                const mediaElements = frameContainer.querySelectorAll('video, audio');
+                mediaElements.forEach(media => media.pause());
+                frameContainer.innerHTML = '';
+            }
+        });
+    }
 }
 
 // UI Configuration based on Logged-in User Roles
