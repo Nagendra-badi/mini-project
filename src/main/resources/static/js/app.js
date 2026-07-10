@@ -122,14 +122,14 @@ function initAuthPages(page) {
             const phone = document.getElementById('reg-phone').value.trim();
             const password = document.getElementById('reg-password').value;
             const confirm = document.getElementById('reg-confirm-password').value;
-            const role = document.getElementById('reg-role').value;
-
+            const role = 'USER';
+            
             if (password !== confirm) {
                 errorAlert.textContent = 'Passwords do not match.';
                 errorAlert.classList.remove('d-none');
                 return;
             }
-
+            
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',

@@ -27,9 +27,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> register(@RequestBody User user) {
         Map<String, String> response = new HashMap<>();
         try {
-            if (user.getRole() == null || user.getRole().isEmpty()) {
-                user.setRole("USER"); // Default role
-            }
+            user.setRole("USER"); // Always force USER role to restrict ADMIN registration
             User registeredUser = userService.register(user);
             activityLogService.log(registeredUser.getUsername(), "REGISTER", "Successfully registered new account");
             response.put("message", "Registration successful.");
