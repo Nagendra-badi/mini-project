@@ -144,8 +144,8 @@ public class AuthController {
     public ResponseEntity<?> testDb() {
         Map<String, Object> result = new HashMap<>();
         try {
-            List<User> users = userService.getAllUsers();
-            List<Map<String, Object>> usersList = new java.util.ArrayList<>();
+            java.util.List<User> users = userService.getAllUsers();
+            java.util.List<Map<String, Object>> usersList = new java.util.ArrayList<>();
             for (User u : users) {
                 Map<String, Object> item = new HashMap<>();
                 item.put("id", u.getId());
@@ -155,8 +155,8 @@ public class AuthController {
             }
             result.put("users", usersList);
 
-            List<com.ddms.model.Document> docs = documentRepository.findAll();
-            List<Map<String, Object>> docsList = new java.util.ArrayList<>();
+            java.util.List<com.ddms.model.Document> docs = documentRepository.findAll();
+            java.util.List<Map<String, Object>> docsList = new java.util.ArrayList<>();
             for (com.ddms.model.Document d : docs) {
                 Map<String, Object> item = new HashMap<>();
                 item.put("id", d.getId());
