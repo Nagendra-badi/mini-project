@@ -136,4 +136,39 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @Autowired
+    private com.ddms.repository.DocumentRepository documentRepository;
+
+    @GetMapping("/test-db")
+    public ResponseEntity<?> testDb() {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<User> users = userService.getAllUsers();
+            List<Map<String, Object>> usersList = new java.util.ArrayList<>();
+            for (User u : users) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", u.getId());
+                item.put("username", u.getUsername());
+                item.put("role", u.getRole());
+                usersList.add(item);
+            }
+            result.put("users", usersList);
+
+            List<com.ddms.model.Document> docs = documentRepository.findAll();
+            List<Map<String, Object>> docsList = new java.util.ArrayList<>();
+            for (com.ddms.model.Document d : docs) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", d.getId());
+                item.put("originalName", d.getOriginalName());
+                item.put("uploadedBy_id", d.getUploadedBy() != null ? d.getUploadedBy().getId() : null);
+                item.put("uploadedBy_username", d.getUploadedBy() != null ? d.getUploadedBy().getUsername() : null);
+                docsList.add(item);
+            }
+            result.put("documents", docsList);
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+        }
+        return ResponseEntity.ok(result);
+    }
 }
