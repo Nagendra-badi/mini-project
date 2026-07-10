@@ -354,16 +354,27 @@ function renderRecentUploadsTable(uploads) {
     const tbody = document.getElementById('recent-uploads-table');
     tbody.innerHTML = '';
     if (uploads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-secondary">No files uploaded recently</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-secondary">No files uploaded recently</td></tr>';
         return;
     }
     uploads.forEach(u => {
         const tr = document.createElement('tr');
+        const canDelete = currentUser.role === 'ADMIN' || currentUser.username === u.uploadedBy;
+        const deleteButton = canDelete 
+            ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDocument(${u.id})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`
+            : `<button class="btn btn-sm btn-outline-danger" disabled title="Delete"><i class="fa-solid fa-trash-can"></i></button>`;
+
         tr.innerHTML = `
             <td><span class="fw-bold">${u.originalName}</span></td>
             <td><span class="badge bg-light text-dark">${u.uploadedBy}</span></td>
             <td>${formatBytes(u.fileSize)}</td>
             <td>${formatDate(u.uploadDate)}</td>
+            <td class="text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-sm btn-outline-primary" onclick="previewDocument(${u.id})" title="Preview & Details"><i class="fa-solid fa-eye"></i></button>
+                    ${deleteButton}
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -668,14 +679,27 @@ async function previewDocument(docId) {
         
         const type = doc.fileType.toLowerCase();
         if (type === 'jpg' || type === 'jpeg' || type === 'png' || type === 'gif') {
-            frameContainer.innerHTML = `<img src="${doc.s3Url}" class="img-fluid" alt="Image preview">`;
-        } else if (type === 'pdf' || type === 'txt') {
-            // Serve PDF inline inside iFrame
-            frameContainer.innerHTML = `<iframe src="/api/documents/${doc.id}/download"></iframe>`;
+            frameContainer.innerHTML = `<img src="${doc.s3Url}" class="img-fluid rounded border border-secondary border-opacity-10" alt="Image preview" style="max-height: 400px; object-fit: contain; width: 100%;">`;
+        } else if (type === 'pdf') {
+            frameContainer.innerHTML = `<iframe src="/api/documents/${doc.id}/download" style="width: 100%; height: 400px; border: 0;" class="rounded border border-secondary border-opacity-10"></iframe>`;
+        } else if (['txt', 'html', 'css', 'js', 'json', 'xml', 'csv', 'java', 'py', 'sql', 'md'].includes(type)) {
+            frameContainer.innerHTML = `
+                <div class="text-center p-4 text-secondary">
+                    <i class="fa-solid fa-spinner fa-spin display-6 mb-2"></i>
+                    <div>Loading text content...</div>
+                </div>`;
+            fetch(`/api/documents/${doc.id}/download`)
+                .then(r => r.text())
+                .then(text => {
+                    frameContainer.innerHTML = `<pre class="bg-dark text-light p-3 rounded small border-0" style="max-height: 400px; overflow-y: auto; text-align: left; white-space: pre-wrap; word-break: break-all; margin: 0; font-family: monospace;"><code>${escapeHtml(text)}</code></pre>`;
+                })
+                .catch(err => {
+                    frameContainer.innerHTML = `<div class="text-danger text-center p-4">Failed to load text content.</div>`;
+                });
         } else {
             // No direct inline preview for ZIP/DOCX/XLSX
             frameContainer.innerHTML = `
-                <div class="text-secondary text-center">
+                <div class="text-secondary text-center p-4">
                     <i class="fa-solid fa-file-arrow-down display-1 mb-3"></i>
                     <div>Direct preview not supported for <strong>.${type.toUpperCase()}</strong> files.</div>
                     <div class="small mt-1 text-muted">Please download the file to inspect contents.</div>
