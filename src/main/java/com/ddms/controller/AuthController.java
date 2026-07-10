@@ -21,6 +21,9 @@ public class AuthController {
     @Autowired
     private ActivityLogService activityLogService;
 
+    @Autowired
+    private com.ddms.service.DocumentService documentService;
+
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody User user) {
         Map<String, String> response = new HashMap<>();
@@ -178,10 +181,11 @@ public class AuthController {
             }
             result.put("documents", docsList);
 
-            // Run test query for userId = 1 (Bhaskar)
+            // Run test query for userId = 1 (Bhaskar) using Specification search
             try {
-                org.springframework.data.domain.Page<com.ddms.model.Document> testQueryPage = documentRepository.searchDocuments(
-                        1L, null, null, null, null, null, org.springframework.data.domain.PageRequest.of(0, 10)
+                User testUser = userService.findById(1L).orElse(null);
+                org.springframework.data.domain.Page<com.ddms.model.Document> testQueryPage = documentService.searchAndFilterDocuments(
+                        testUser, null, null, null, null, 0, 10
                 );
                 result.put("test_query_success", true);
                 result.put("test_query_count", testQueryPage.getTotalElements());
