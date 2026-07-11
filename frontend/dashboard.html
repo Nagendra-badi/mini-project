@@ -68,7 +68,7 @@
                 
                 <!-- Stat Cards -->
                 <div class="row g-4 mb-5">
-                    <div class="col-md-3">
+                    <div class="col-md-4 col-sm-6">
                         <div class="glass-panel stat-card border-start border-4 border-primary">
                             <div>
                                 <div class="text-secondary small fw-semibold">Total Documents</div>
@@ -77,7 +77,7 @@
                             <div class="stat-icon text-primary"><i class="fa-solid fa-file-lines"></i></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4 col-sm-6">
                         <div class="glass-panel stat-card border-start border-4 border-success">
                             <div>
                                 <div class="text-secondary small fw-semibold">Storage Used</div>
@@ -86,16 +86,7 @@
                             <div class="stat-icon text-success"><i class="fa-solid fa-server"></i></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="glass-panel stat-card border-start border-4 border-info">
-                            <div>
-                                <div class="text-secondary small fw-semibold">Recent Uploads</div>
-                                <h2 class="fw-bold mt-1" id="stat-recent-uploads">0</h2>
-                            </div>
-                            <div class="stat-icon text-info"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 admin-only d-none">
+                    <div class="col-md-4 col-sm-12 admin-only d-none">
                         <div class="glass-panel stat-card border-start border-4 border-warning">
                             <div>
                                 <div class="text-secondary small fw-semibold">Registered Users</div>
@@ -126,7 +117,28 @@
                     </div>
                 </div>
 
-
+                <!-- Recent Activities -->
+                <div class="glass-panel p-4 mb-4">
+                    <h5 class="fw-bold mb-4">Recent Upload Timeline</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Uploaded By</th>
+                                    <th>Size</th>
+                                    <th>Upload Date</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-uploads-table">
+                                <tr>
+                                    <td colspan="5" class="text-center text-secondary">No files uploaded recently</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- ================= PAGE: MY DOCUMENTS ================= -->
@@ -563,7 +575,7 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom APP JS -->
-    <script src="js/app.js?v=2.6"></script>
+    <script src="js/app.js?v=2.7"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             initDashboard();

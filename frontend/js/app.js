@@ -323,7 +323,8 @@ async function loadDashboardStats() {
         if (currentUser.role === 'ADMIN') {
             document.getElementById('stat-total-docs').textContent = data.totalDocuments;
             document.getElementById('stat-storage-used').textContent = formatBytes(data.storageUsed);
-            document.getElementById('stat-recent-uploads').textContent = data.recentUploads.length;
+            const recentUploadsEl = document.getElementById('stat-recent-uploads');
+            if (recentUploadsEl) recentUploadsEl.textContent = data.recentUploads.length;
             document.getElementById('stat-total-users').textContent = data.totalUsers;
 
             renderRecentUploadsTable(data.recentUploads);
@@ -337,7 +338,8 @@ async function loadDashboardStats() {
 
             // Calculate active timelines
             let recentDocs = [...docsList].sort((a,b) => new Date(b.uploadDate) - new Date(a.uploadDate)).slice(0, 5);
-            document.getElementById('stat-recent-uploads').textContent = recentDocs.length;
+            const recentUploadsEl = document.getElementById('stat-recent-uploads');
+            if (recentUploadsEl) recentUploadsEl.textContent = recentDocs.length;
 
             renderRecentUploadsTable(recentDocs.map(d => ({
                 id: d.id,
