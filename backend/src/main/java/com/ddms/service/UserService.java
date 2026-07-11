@@ -118,17 +118,38 @@ public class UserService {
         for (User u : users) {
             long oldId = u.getId();
             if (oldId != newId) {
-                // 1. Update matching user foreign keys in the documents table
-                entityManager.createNativeQuery("UPDATE documents SET user_id = :newId WHERE user_id = :oldId")
-                        .setParameter("newId", newId)
+                // Fetch document IDs belonging to this user
+                List<?> docIdsRaw = entityManager.createNativeQuery("SELECT id FROM documents WHERE user_id = :oldId")
                         .setParameter("oldId", oldId)
-                        .executeUpdate();
+                        .getResultList();
                 
+                List<Long> docIds = new java.util.ArrayList<>();
+                for (Object obj : docIdsRaw) {
+                    if (obj instanceof Number) {
+                        docIds.add(((Number) obj).longValue());
+                    }
+                }
+
+                if (!docIds.isEmpty()) {
+                    // 1. Temporarily unlink documents from old user ID to prevent FK violation during ID migration
+                    entityManager.createNativeQuery("UPDATE documents SET user_id = NULL WHERE user_id = :oldId")
+                            .setParameter("oldId", oldId)
+                            .executeUpdate();
+                }
+
                 // 2. Update user ID in the users table
                 entityManager.createNativeQuery("UPDATE users SET id = :newId WHERE id = :oldId")
                         .setParameter("newId", newId)
                         .setParameter("oldId", oldId)
                         .executeUpdate();
+
+                if (!docIds.isEmpty()) {
+                    // 3. Re-link documents to the new user ID
+                    entityManager.createNativeQuery("UPDATE documents SET user_id = :newId WHERE id IN (:docIds)")
+                            .setParameter("newId", newId)
+                            .setParameter("docIds", docIds)
+                            .executeUpdate();
+                }
             }
             newId++;
         }
