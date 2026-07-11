@@ -367,6 +367,7 @@ async function loadDashboardStats() {
 
 function renderRecentUploadsTable(uploads) {
     const tbody = document.getElementById('recent-uploads-table');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (uploads.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-secondary">No files uploaded recently</td></tr>';
