@@ -114,28 +114,22 @@ public class UserService {
         // will throw AssertionFailure if the entities remain attached during transaction flush/commit.
         entityManager.clear();
         
+        // Create a temporary dummy user in the users table to act as a placeholder for foreign key mapping
+        try {
+            entityManager.createNativeQuery("INSERT INTO users (id, username, password, email, role, full_name) VALUES (999999, '__temp_dummy__', 'dummy', 'dummy@ddms.com', 'USER', 'Dummy')")
+                    .executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Temporary user insertion note: " + e.getMessage());
+        }
+
         long newId = 1;
         for (User u : users) {
             long oldId = u.getId();
             if (oldId != newId) {
-                // Fetch document IDs belonging to this user
-                List<?> docIdsRaw = entityManager.createNativeQuery("SELECT id FROM documents WHERE user_id = :oldId")
+                // 1. Temporarily move documents to the dummy user (complying with NOT NULL constraints)
+                entityManager.createNativeQuery("UPDATE documents SET user_id = 999999 WHERE user_id = :oldId")
                         .setParameter("oldId", oldId)
-                        .getResultList();
-                
-                List<Long> docIds = new java.util.ArrayList<>();
-                for (Object obj : docIdsRaw) {
-                    if (obj instanceof Number) {
-                        docIds.add(((Number) obj).longValue());
-                    }
-                }
-
-                if (!docIds.isEmpty()) {
-                    // 1. Temporarily unlink documents from old user ID to prevent FK violation during ID migration
-                    entityManager.createNativeQuery("UPDATE documents SET user_id = NULL WHERE user_id = :oldId")
-                            .setParameter("oldId", oldId)
-                            .executeUpdate();
-                }
+                        .executeUpdate();
 
                 // 2. Update user ID in the users table
                 entityManager.createNativeQuery("UPDATE users SET id = :newId WHERE id = :oldId")
@@ -143,15 +137,20 @@ public class UserService {
                         .setParameter("oldId", oldId)
                         .executeUpdate();
 
-                if (!docIds.isEmpty()) {
-                    // 3. Re-link documents to the new user ID
-                    entityManager.createNativeQuery("UPDATE documents SET user_id = :newId WHERE id IN (:docIds)")
-                            .setParameter("newId", newId)
-                            .setParameter("docIds", docIds)
-                            .executeUpdate();
-                }
+                // 3. Re-link documents to the new user ID
+                entityManager.createNativeQuery("UPDATE documents SET user_id = :newId WHERE user_id = 999999")
+                        .setParameter("newId", newId)
+                        .executeUpdate();
             }
             newId++;
+        }
+        
+        // Clean up the temporary dummy user
+        try {
+            entityManager.createNativeQuery("DELETE FROM users WHERE id = 999999")
+                    .executeUpdate();
+        } catch (Exception e) {
+            System.err.println("Could not delete dummy user: " + e.getMessage());
         }
         
         // 3. Reset the primary key auto-increment sequence
