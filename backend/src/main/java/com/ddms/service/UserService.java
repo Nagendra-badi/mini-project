@@ -31,9 +31,7 @@ public class UserService {
             throw new Exception("Email already exists.");
         }
         
-        // In a real application, hash the password. 
-        // For simplicity, we store it as plain text or simple hash.
-        return userRepository.save(user);
+        
     }
 
     public User login(String username, String password) throws Exception {
