@@ -31,7 +31,7 @@ public class UserService {
             throw new Exception("Email already exists.");
         }
         
-        
+        return userRepository.save(user);
     }
 
     public User login(String username, String password) throws Exception {
